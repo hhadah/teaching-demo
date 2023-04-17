@@ -1,0 +1,267 @@
+---
+title: "Linear Regression"
+author: "Hussain Hadah"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ["default", "assets/sydney-fonts.css", "assets/sydney.css"]
+    self_contained: false # if true, fonts will be stored locally
+    seal: true # show a title slide with YAML information
+    includes:
+      in_header: "assets/mathjax-equation-numbers.html"
+    nature:
+      beforeInit: ["assets/remark-zoom.js", "https://platform.twitter.com/widgets.js"]
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: '16:9' # alternatives '16:9' or '4:3' or others e.g. 13:9
+      navigation:
+        scroll: false # disable slide transitions by scrolling
+---
+name: toc
+layout: true
+<div style="position: absolute;left:20px;bottom:5px;color:black;font-size: 12px;">`r rmarkdown::metadata$author` (UH) | `r rmarkdown::metadata$subtitle` | `r format(Sys.time(), '%d %B %Y')`</div>
+
+<!--- `r rmarkdown::metadata$subtitle` | `r format(Sys.time(), '%d %B %Y')`-->
+
+---
+
+```{r, load_refs, echo=FALSE, cache=FALSE, message=FALSE}
+library(RefManageR)
+BibOptions(check.entries = FALSE, 
+           bib.style = "authoryear", 
+           cite.style = 'authoryear', 
+           style = "markdown",
+           hyperlink = FALSE, 
+           dashed = FALSE)
+myBib <- ReadBib("assets/example.bib", check = FALSE)
+top_icon = function(x) {
+  icons::icon_style(
+    icons::fontawesome(x),
+    position = "fixed", top = 10, right = 10
+  )
+}
+```
+
+```{r setup, include=FALSE}
+# xaringanExtra::use_scribble() ## Draw on slides. Requires dev version of xaringanExtra.
+
+options(htmltools.dir.version = FALSE)
+library(knitr)
+opts_chunk$set(
+  fig.align="center",  
+  fig.height=4, fig.width=6,
+  out.width="748px", out.length="520.75px",
+  dpi=300, #fig.path='Figs/',
+  cache=F#, echo=F, warning=F, message=F
+  )
+```
+
+```{r data, include=FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, hrbrthemes, sysfonts, 
+               showtext,  gghighlight)
+
+load(file.path("/Users/hhadah/Documents/GiT/teaching-demo/linear-regression","parenthood.Rdata"))
+
+font_add_google("Fira Sans", "firasans")
+font_add_google("Fira Code", "firasans")
+
+showtext_auto()
+options(modelsummary_format_numeric_latex = "mathmode")
+showtext_opts(dpi = 300)
+
+theme_customs <- function() {
+  theme_minimal(base_family = "IBM Plex Sans Condensed") +
+    theme(panel.grid.minor = element_blank(),
+          plot.background = element_rect(fill = "white", color = NA),
+          plot.title = element_text(face = "bold", size = rel(2)),
+          axis.title = element_text(face = "bold"),
+          strip.text = element_text(face = "bold"),
+          strip.background = element_rect(fill = "grey80", color = NA),
+          legend.title = element_text(face = "bold", size = rel(1)),
+          axis.text.y  = element_text(size = 18),
+          axis.text.x  = element_text(size = 18),
+          axis.title.x = element_text(size = 20),
+          axis.title.y = element_text(size = 20),
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.text = element_text(size = rel(1)))
+}
+```
+
+```{css, echo=F}
+    /* Table width = 100% max-width */
+
+    .remark-slide table{
+        width: 100%;
+    }
+
+    /* Change the background color to white for shaded rows (even rows) */
+
+    .remark-slide thead, .remark-slide tr:nth-child(2n) {
+        background-color: white;
+    }
+    .remark-slide thead, .remark-slide tr:nth-child(n) {
+        background-color: white;
+    }
+```
+
+## Table of contents
+
+1. [Prologue](#prologue)
+
+---
+class: segue-red
+
+# Prologue
+
+---
+
+## What We Will Learn
+
+.blockquote[
+### `r icons::fontawesome("location-arrow")` Aim
+
+#### 1. Introduce Linear Regression 
+
+#### 2. Understand the Intuition of Linear Regression 
+
+#### 3. Deriving the Regression Equation
+
+#### 4. Running a Linear Regression in R
+]
+
+
+---
+class: segue-red
+
+# Linear Regression
+
+---
+## What is a Linear Regression?
+
+.Large[.content-box-purple[
+A linear regression is a tool used by economists to analyze relationships between interval scale predictors and interval scale outcomes
+]]
+
+--
+- What does this definition reminde you of?
+
+--
+- Correlations
+
+---
+## What is a linear regression model?
+
+```{r regression0, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE}
+
+parenthood |> 
+  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  geom_point() +
+  theme_customs() +
+  labs(x = "My sleep (hours)",
+       y = "My grumpiness (0-100)")
+```
+
+---
+count: false
+## What is a linear regression model?
+
+```{r regression2, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE, fig.height=3}
+
+parenthood |> 
+  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  geom_point() +
+  theme_customs() +
+  theme(axis.title.y = element_text(size = 15)) +
+  labs(x = "My sleep (hours)",
+       y = "My grumpiness (0-100)")
+```
+
+- We can predict my grumpiness based on the data points
+
+---
+count: false
+
+## What is a linear regression model?
+
+```{r regression3, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE, fig.height=3}
+
+parenthood |> 
+  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  geom_point() +
+  geom_vline(xintercept = 7, color = "red", linetype = "dashed") +
+  gghighlight(dan.sleep < 7.1 & dan.sleep >  6.9) + 
+  theme_customs() +
+  theme(axis.title.y = element_text(size = 15)) +
+  labs(x = "My sleep (hours)",
+       y = "My grumpiness (0-100)")
+```
+
+- We can predict my grumpiness based on the data points
+- How grumpy could I be if I had 7 hours of sleep?
+
+---
+## Predict my grumpiness given any hours of sleep
+
+```{r regression4, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE}
+
+parenthood |> 
+  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  geom_point() +
+  theme_customs() +
+  labs(x = "My sleep (hours)",
+       y = "My grumpiness (0-100)")
+```
+
+
+---
+## Regression: “Best Fitting” Line Through Cloud of Points
+
+```{r regression5, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE, results='hide', message = FALSE}
+
+parenthood |> 
+  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  geom_point() +
+  suppressMessages(geom_smooth(method = "lm", se = FALSE)) +
+  theme_customs() +
+  labs(x = "My sleep (hours)",
+       y = "My grumpiness (0-100)")
+```
+
+---
+class: segue-red
+
+# Deriving the Regression Equation
+
+---
+## The Regression Equation
+
+#### To derive the regression, let remember some highschool math
+
+The formula of a straight line is given by:
+$$
+y = mx + c
+$$
+--
+
+- There are two variables, $x$ and $y$
+
+- There are two coefficients, $m$ and $c$
+
+--
+- $m$ is the slope of a line
+
+- $c$ y-intercept 
+
+```{r gen_pdf, include = FALSE, cache = FALSE, eval = FALSE}
+
+# https://hhadah.github.io/MicroSlides/MyPresentations/intro/intro.html
+
+infile = list.files(path = "/Users/hhadah/Documents/GiT/teaching-demo/index.html", pattern = 'index.html')
+pagedown::chrome_print(input = infile, timeout = 100)
+xaringan::inf_mr() 
+```
+

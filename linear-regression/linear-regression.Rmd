@@ -1,0 +1,86 @@
+---
+title: "Linear regression"
+# subtitle: "<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+#subtitle: "Change in Hispanic Identity"
+author: "Hussain Hadah"
+date: "University of Houston | `r format(Sys.time(), '%B %d %Y')`"
+# `r format(Sys.time(), '%d %B %Y')`
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts] 
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      highlightSpans: true
+      slideNumberFormat: "%current%"
+      countIncrementalSlides: true
+---
+name: toc
+
+
+```{css, echo=FALSE}
+# CSS for including pauses in printed PDF output (see bottom of lecture)
+@media print {
+  .has-continuation {
+    display: block !important;
+  }
+}
+```
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(knitr)
+opts_chunk$set(
+  fig.align="center",  
+  fig.height=4, #fig.width=6,
+  # out.width="748px", #out.length="520.75px",
+  dpi=300, #fig.path='Figs/',
+  cache=T#, echo=F, warning=F, message=F
+  )
+library(viridis)
+library(hrbrthemes)
+library(patchwork)
+library(cowplot)
+```
+
+# Table of contents
+
+1. [Prologue](#prologue)
+
+---
+class: inverse, center, middle
+name: prologue
+
+# Prologue
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>
+
+---
+
+# What We Will Learn
+
+### Introduce Linear Regression 
+
+### Understand the Intuition of Linear Regression 
+
+### Deriving the Regression Equation
+
+### Running a Linear Regression in R
+
+class: inverse, center, middle
+name: linear-reg
+
+# Linear Regression
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>
+
+---
+
+
+```{r gen_pdf, include = FALSE, cache = FALSE, eval = TRUE}
+# https://hhadah.github.io/MicroSlides/MyPresentations/intro/intro.html
+
+infile = list.files(path = "/Users/hhadah/Documents/GiT/teaching-demo/linear-regression/", pattern = '.html')
+pagedown::chrome_print(input = infile, timeout = 100)
+```
