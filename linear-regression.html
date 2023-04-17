@@ -4,7 +4,7 @@
     <title>Linear Regression</title>
     <meta charset="utf-8" />
     <meta name="author" content="Hussain Hadah" />
-    <meta name="date" content="2023-04-16" />
+    <meta name="date" content="2023-04-17" />
     <script src="linear-regression_files/header-attrs/header-attrs.js"></script>
     <link href="linear-regression_files/remark-css/default.css" rel="stylesheet" />
     <script type="text/x-mathjax-config">
@@ -33,16 +33,16 @@ class: center, middle, inverse, title-slide
 ### Hussain Hadah
 ]
 .date[
-### 16 April 2023
+### 17 April 2023
 ]
 
 ---
 
 name: toc
 layout: true
-&lt;div style="position: absolute;left:20px;bottom:5px;color:black;font-size: 12px;"&gt;Hussain Hadah (UH) |  | 16 April 2023&lt;/div&gt;
+&lt;div style="position: absolute;left:20px;bottom:5px;color:black;font-size: 12px;"&gt;Hussain Hadah (UH) |  | 17 April 2023&lt;/div&gt;
 
-&lt;!---  | 16 April 2023--&gt;
+&lt;!---  | 17 April 2023--&gt;
 
 ---
 
@@ -72,8 +72,13 @@ layout: true
 ## Table of contents
 
 1. [Prologue](#prologue)
+2. [Linear Regression](#linear-regression)
+3. [Intuition](#intuition)
+4. [Deriving the Regression Equation](#deriving-the-regression-equation)
+5. [Running a Linear Regression in R](#running-a-linear-regression-in-r)
 
 ---
+name: prologue
 class: segue-red
 
 # Prologue
@@ -96,6 +101,7 @@ class: segue-red
 
 
 ---
+name: linear-regression
 class: segue-red
 
 # Linear Regression
@@ -163,6 +169,15 @@ count: false
 &lt;/div&gt;
 
 ---
+## Regression: “Best Fitting” Line Through Cloud of Points
+
+&lt;div class="figure" style="text-align: center"&gt;
+&lt;img src="linear-regression_files/figure-html/regression6-1.png" alt="Two regression lines." width="748px" /&gt;
+&lt;p class="caption"&gt;Two regression lines.&lt;/p&gt;
+&lt;/div&gt;
+
+---
+name: linear-regression-intuition
 class: segue-red
 
 # Deriving the Regression Equation
@@ -170,7 +185,7 @@ class: segue-red
 ---
 ## The Regression Equation
 
-#### To derive the regression, let remember some highschool math
+#### To derive the regression, let remember some high school math
 
 The formula of a straight line is given by:
 $$
@@ -183,9 +198,107 @@ $$
 - There are two coefficients, `\(m\)` and `\(c\)`
 
 --
-- `\(m\)` is the slope of a line
+- `\(\pmb{m}\)`: is the slope of a line and is `\(y\)` divided by the change in `\(x\)`
 
-- `\(c\)` y-intercept 
+- `\(\pmb{c}\)`: is the y-intercept 
+
+--
+
+#### We use the same exact formula to describe a linear regression line:
+
+$$
+\hat{Y_i} = \beta_0 + \beta_1 X_i
+$$
+
+---
+## The Regression Equation (cont.)
+
+$$
+\hat{Y_i} = \beta_0 + \beta_1 X_i
+$$
+
+- `\(X_i\)`: is the value of predictor variable for the _i_th observation
+  - numbers of hours of sleep I got on day _i_
+- `\(Y_i\)`: is the corresponding value of the outcome variable (i.e., my grumpiness on that day)
+- `\(\hat{Y_i}\)`: is the predicted value of `\(Y_i\)` for a given value of `\(X_i\)`
+  - `\(Y_i\)` is actual data
+  - `\(\hat{Y_i}\)` is the estimate
+- `\(\beta_0\)`: is the y-intercept
+- `\(\beta_1\)`: is the slope of the line
+
+---
+## The Regression Equation (cont.)
+
+- Not all the data points will fall on the regression line
+- In other words, `\(Y_i\)` are not identical to the predicted values from the model `\(\hat{Y_i}\)`
+
+--
+- The difference between the actual and predicted values is called the **residuals**, `\(\epsilon_i\)`:
+$$
+\epsilon_i = Y_i - \hat{Y_i}
+$$
+
+--
+- Now we know everything we need to know to write down a linear regression model as:
+$$
+\hat{Y_i} = \beta_0 + \beta_1 X_i + \epsilon_i
+$$
+
+---
+name: ols-regression
+class: segue-red
+
+# Ordinary Least Squares 
+
+---
+## Estimating a Linear Regression Model
+
+- How to we chose the values of `\(\beta_0\)` and `\(\beta_1\)`?
+
+
+&lt;img src="linear-regression_files/figure-html/regression7-1.png" width="748px" style="display: block; margin: auto;" /&gt;
+
+---
+## Least Squares Regression Predict Using a Line
+
+### The Prediction
+Predict my grumpiness `\(\hat{Y_i} = \beta_0 + \beta_1 X_i\)` if I slept `\(x\)` hours
+
+### How to we chose the values of `\(\beta_0\)` and `\(\beta_1\)`?
+
+- The lines regression choose the values of `\(\beta_0\)` and `\(\beta_1\)` that minimize the sum of the squared residuals `\(\sum_{i=1}^n \epsilon_i\)`
+
+#### The sum of the squared residuals is given by:
+
+$$
+\sum_{i=1}^n (Y_i - \hat{Y_i})^2
+$$
+
+- When minimized, we will get the optimal estiamted `\(\hat{\beta_0}\)` and `\(\hat{beta_1}\)`?
+
+- The more technical name for this estimation process is _.brand-blue[ordinary least squares (OLS) regression]_
+
+---
+name: ols-in-r
+class: segue-red
+
+# Regression in R
+
+---
+## Using the `lm()` function
+
+- The `lm()` function is used to fit linear models in R
+- It's a complicated function, type `?lm` to see the documentation
+- For this class, we will only use the basic syntax that we've seen before
+
+--
+- A `formula`
+- A `data` frame
+
+
+```r
+*lm(formula = Y ~ X, data = data.frame)
+```
 
 
 
