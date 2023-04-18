@@ -67,15 +67,21 @@ layout: true
     .remark-slide thead, .remark-slide tr:nth-child(n) {
         background-color: white;
     }
+
+    .cell_data--negative {
+        content: "-"; /* Add a negative sign before the number */
+        margin-right: 2px; /* Add some space between the sign and the number */
+        text-decoration: none; /* Remove the underline */
+    }
 &lt;/style&gt;
 
 ## Table of contents
 
 1. [Prologue](#prologue)
 2. [Linear Regression](#linear-regression)
-3. [Intuition](#intuition)
 4. [Deriving the Regression Equation](#deriving-the-regression-equation)
-5. [Running a Linear Regression in R](#running-a-linear-regression-in-r)
+5. [Ordinary Least Squares](#ols-regression)
+5. [Running a Linear Regression in R](#ols-in-r)
 
 ---
 name: prologue
@@ -177,7 +183,7 @@ count: false
 &lt;/div&gt;
 
 ---
-name: linear-regression-intuition
+name: deriving-the-regression-equation
 class: segue-red
 
 # Deriving the Regression Equation
@@ -264,7 +270,7 @@ class: segue-red
 ### The Prediction
 Predict my grumpiness `\(\hat{Y_i} = \beta_0 + \beta_1 X_i\)` if I slept `\(x\)` hours
 
-### How to we chose the values of `\(\beta_0\)` and `\(\beta_1\)`?
+- How to we chose the values of `\(\beta_0\)` and `\(\beta_1\)`?
 
 - The lines regression choose the values of `\(\beta_0\)` and `\(\beta_1\)` that minimize the sum of the squared residuals `\(\sum_{i=1}^n \epsilon_i\)`
 
@@ -297,8 +303,308 @@ class: segue-red
 
 
 ```r
-*lm(formula = Y ~ X, data = data.frame)
+lm(formula = Y ~ X, data = data.frame)
 ```
+---
+## Using the Sleep Data
+
+
+- First we load the data
+
+
+```r
+load(file.path("/PATH/TO/DATA","parenthood.Rdata"))
+```
+
+- Then we run the regression
+- `hours_slept` is the predictor variable or dependent variable
+- `grumpiness` is the outcome variable or independent variable
+
+
+```r
+regression &lt;- lm(formula = grumpiness ~ hours_slept, data = parenthood)
+```
+
+- You can print the results using the following options
+
+
+```r
+print(regression)
+summary(regression)
+tidy(regression) # broom package
+```
+
+---
+## Using the Sleep Data (cont.)
+
+
+
+- The `print()` function gives us a lot of information about the regression
+
+
+```r
+print(regression)
+```
+
+```
+## 
+## Call:
+## lm(formula = grumpiness ~ hours_slept, data = parenthood)
+## 
+## Coefficients:
+## (Intercept)  hours_slept  
+##     125.956       -8.937
+```
+---
+## Using the Sleep Data (cont.)
+
+- The `summary()` function gives us a lot of information about the regression
+
+```r
+summary(regression)
+```
+
+```
+## 
+## Call:
+## lm(formula = grumpiness ~ hours_slept, data = parenthood)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -11.025  -2.213  -0.399   2.681  11.750 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 125.9563     3.0161   41.76   &lt;2e-16 ***
+## hours_slept  -8.9368     0.4285  -20.85   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 4.332 on 98 degrees of freedom
+## Multiple R-squared:  0.8161,	Adjusted R-squared:  0.8142 
+## F-statistic: 434.9 on 1 and 98 DF,  p-value: &lt; 2.2e-16
+```
+
+---
+# Translating Results to Math
+
+$$
+\widehat{\text{Grumpiness}} = 125.9563 + (-8.9368) \times \text{Sleep} 
+$$
+
+--
+
+- In other words, the estimates that would draw the best fitting line are:
+
+  - `\(\hat{\beta_0} = 125.9563\)`, intercept
+  - `\(\hat{\beta_1} = -8.9368\)`
+
+
+---
+# Interpreting the Regression Results
+
+$$
+\widehat{\text{Grumpiness}} = 125.9563 + (8.9368) \times \text{Sleep} 
+$$
+
+--
+.font80[.content-box-purple[
+On average, a one hour increase in sleep is associated with 8.9368 lower Grumpiness, holding everything else constant
+]]
+
+--
+.font80[.content-box-purple[
+The intercept is the expected grumpinness of 125.9563 when sleep is 0 hours 😡
+]]
+
+---
+# Predicting Grumpiness Given a 5 Hour Sleep
+
+$$
+\widehat{\text{Grumpiness}} = 125.9563 + (8.9368) \times \text{Sleep} 
+$$
+
+- By hand:
+
+
+```r
+125.9563 + (-8.9368 * 5)
+```
+
+```
+## [1] 81.2723
+```
+
+--
+- Using `predict()` function
+
+
+```r
+grumpiness &lt;- data.frame(hours_slept = 5)
+predict(regression, newdata = grumpiness)
+```
+
+```
+##        1 
+## 81.27251
+```
+
+---
+## Multiple Linear Regression
+
+- The example we just did was a simple linear regression with a single variable
+
+- Most research projects have multiple predictors
+
+- Out example predicted the effect of sleep on grumpiness
+
+- We could add another predictor, like the number of hours my dogs sleep
+
+### In R
+
+
+```r
+regression2 &lt;- lm(formula = grumpiness ~ hours_slept + dogs, data = parenthood)
+print(regression2)
+```
+
+```
+## 
+## Call:
+## lm(formula = grumpiness ~ hours_slept + dogs, data = parenthood)
+## 
+## Coefficients:
+## (Intercept)  hours_slept         dogs  
+##   125.96557     -8.95025      0.01052
+```
+---
+## Formula for the General caused
+
+`\begin{align*}
+Y_i &amp;= \beta_0 + (\sum_{k = 1}^K \beta_k X_{ik}) + \epsilon_i \\
+&amp;= \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \dots + \beta_K X_{iK} + \epsilon_i
+\end{align*}`
+
+---
+## How do we Know if a Model is Good?
+
+### The `\(R^2\)`
+
+- The `\(R^2\)` is a measure of how well the model fits the data
+- It is the proportion of the variance in the outcome variable that is explained by the model
+
+$$
+R^2 = \frac{\text{Explained Variation}}{\text{Total Variation}}
+$$
+
+--
+### We can calculate it using we need to do the following
+
+1. Sum of the squared residuals:
+$$
+SS_{res} = \sum_i (\epsilon_i)^2 =\sum_i (Y_i - \hat{Y_i})^2
+$$
+
+2. Total Sum of Squares:
+$$
+SS_{tot} = \sum_i (Y_i - \bar{Y_i})^2
+$$
+
+---
+## In R
+
+
+```r
+X &lt;- parenthood$hours_slept # predictor
+Y &lt;- parenthood$grumpiness # outcome
+```
+
+- To calculate `\(\hat{Y_i}\)`:
+
+
+```r
+Y.pred &lt;- -8.94 * X + 125.97
+```
+
+--
+- The sum squared residuals (SSR):
+
+
+```r
+SS.res &lt;- sum((Y - Y.pred)^2)
+```
+
+--
+- The total sum of squares (SST):
+
+
+```r
+SS.tot &lt;- sum((Y - mean(Y))^2)
+paste0("SSR: ", SS.res, " SST: ", SS.tot)
+```
+
+```
+## [1] "SSR: 1838.72248832 SST: 9998.59"
+```
+
+---
+## In R (cont.)
+
+### The `\(R^2\)`
+
+`\begin{align*}
+R^2 = 1 - \frac{SS_{res}}{SS_{tot}}
+\end{align*}`
+
+#### Which we can now calculate:
+
+
+
+```r
+R.squared &lt;- 1 - (SS.res / SS.tot)
+print( R.squared )
+```
+
+```
+## [1] 0.8161018
+```
+
+--
+
+- The `\(R^2\)` is the proportion of the variance in the outcome variable that is explained by the model
+- It is sometimes called the .brand-red[coefficient of determination]
+- The proportion of the variance in the outcome variable that can be accounted for by the predictor
+- So an `\(R^2\)` of 0.82 means that 82% of the variance in my grumpiness (Y) can be explained by my sleep (X)
+
+---
+## Relationship Between Regression and Correlations
+
+- As I said at the beggining, regression is similiar to correlation from earlier in the semester
+
+- `\(r\)` is the correlation coefficient
+
+- `\(R^2\)` is identical to `\(r^2\)`
+
+
+```r
+r &lt;- cor(X, Y)
+print(r^2)
+```
+
+```
+## [1] 0.8161027
+```
+
+
+```r
+R.squared &lt;- 1 - (SS.res / SS.tot)
+print( R.squared )
+```
+
+```
+## [1] 0.8161018
+```
+
 
 
 

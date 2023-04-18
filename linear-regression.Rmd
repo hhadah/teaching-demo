@@ -64,6 +64,13 @@ pacman::p_load(tidyverse, hrbrthemes, sysfonts,
 
 load(file.path("/Users/hhadah/Documents/GiT/teaching-demo/linear-regression","parenthood.Rdata"))
 
+parenthood <- parenthood %>%
+  rename(grumpiness = dan.grump,
+         hours_slept = dan.sleep,
+         dogs = baby.sleep
+  )
+
+
 font_add_google("Fira Sans", "firasans")
 font_add_google("Fira Code", "firasans")
 
@@ -106,15 +113,21 @@ theme_customs <- function() {
     .remark-slide thead, .remark-slide tr:nth-child(n) {
         background-color: white;
     }
+
+    .cell_data--negative {
+        content: "-"; /* Add a negative sign before the number */
+        margin-right: 2px; /* Add some space between the sign and the number */
+        text-decoration: none; /* Remove the underline */
+    }
 ```
 
 ## Table of contents
 
 1. [Prologue](#prologue)
 2. [Linear Regression](#linear-regression)
-3. [Intuition](#intuition)
 4. [Deriving the Regression Equation](#deriving-the-regression-equation)
-5. [Running a Linear Regression in R](#running-a-linear-regression-in-r)
+5. [Ordinary Least Squares](#ols-regression)
+5. [Running a Linear Regression in R](#ols-in-r)
 
 ---
 name: prologue
@@ -164,7 +177,7 @@ A linear regression is a tool used by economists to analyze relationships betwee
 ```{r regression0, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE}
 
 parenthood |> 
-  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  ggplot(aes(x = hours_slept, y = grumpiness)) +
   geom_point() +
   theme_customs() +
   labs(x = "My sleep (hours)",
@@ -178,7 +191,7 @@ count: false
 ```{r regression2, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE, fig.height=3}
 
 parenthood |> 
-  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  ggplot(aes(x = hours_slept, y = grumpiness)) +
   geom_point() +
   theme_customs() +
   theme(axis.title.y = element_text(size = 15)) +
@@ -196,10 +209,10 @@ count: false
 ```{r regression3, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE, fig.height=3}
 
 parenthood |> 
-  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  ggplot(aes(x = hours_slept, y = grumpiness)) +
   geom_point() +
   geom_vline(xintercept = 7, color = "red", linetype = "dashed") +
-  gghighlight(dan.sleep < 7.1 & dan.sleep >  6.9) + 
+  gghighlight(hours_slept < 7.1 & hours_slept >  6.9) + 
   theme_customs() +
   theme(axis.title.y = element_text(size = 15)) +
   labs(x = "My sleep (hours)",
@@ -215,7 +228,7 @@ parenthood |>
 ```{r regression4, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE}
 
 parenthood |> 
-  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  ggplot(aes(x = hours_slept, y = grumpiness)) +
   geom_point() +
   theme_customs() +
   labs(x = "My sleep (hours)",
@@ -229,7 +242,7 @@ parenthood |>
 ```{r regression5, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE, results='hide', message = FALSE}
 
 parenthood |> 
-  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  ggplot(aes(x = hours_slept, y = grumpiness)) +
   geom_point() +
   suppressMessages(geom_smooth(method = "lm", se = FALSE)) +
   theme_customs() +
@@ -244,7 +257,7 @@ parenthood |>
 
 library(gridExtra)
 plot1 <- parenthood %>%
-  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  ggplot(aes(x = hours_slept, y = grumpiness)) +
   geom_point() +
   suppressMessages(geom_smooth(method = "lm", se = FALSE)) +
   theme_customs() +
@@ -254,7 +267,7 @@ plot1 <- parenthood %>%
        y = "My grumpiness (0-100)")
 
 plot2 <- parenthood %>%
-  ggplot(aes(x = dan.sleep, y = dan.grump)) +
+  ggplot(aes(x = hours_slept, y = grumpiness)) +
   geom_point() +
   geom_abline(slope = -0.5, intercept = 67) +
   theme_customs() +
@@ -267,7 +280,7 @@ grid.arrange(plot1, plot2, ncol = 2)
 ```
 
 ---
-name: linear-regression-intuition
+name: deriving-the-regression-equation
 class: segue-red
 
 # Deriving the Regression Equation
@@ -358,8 +371,8 @@ height <- 6
 
 drawBasicScatterplot <- function(dotcol,title) {
   
-    plot( parenthood$dan.sleep,
-          parenthood$dan.grump,
+    plot( parenthood$hours_slept,
+          parenthood$grumpiness,
           xlab = "My sleep (hours)",
           ylab = "My grumpiness (0-100)",
           col= dotcol,
@@ -368,21 +381,21 @@ drawBasicScatterplot <- function(dotcol,title) {
           pch=19)
   
   }
-good.coef <- lm( dan.grump ~ dan.sleep, parenthood)$coef
+good.coef <- lm( grumpiness ~ hours_slept, parenthood)$coef
 bad.coef <- c(80,-3)
 par(mfrow=c(1,2))
 drawBasicScatterplot( emphGrey, " " )
 	abline( good.coef, col=ifelse(colour,emphCol,"black"), lwd=3 )
-	for(i in seq_along(parenthood$dan.sleep)) {
-	  xval <- parenthood$dan.sleep[i]*c(1,1)
-	  yval <- c(parenthood$dan.grump[i],good.coef[1]+good.coef[2]*parenthood$dan.sleep[i])
+	for(i in seq_along(parenthood$hours_slept)) {
+	  xval <- parenthood$hours_slept[i]*c(1,1)
+	  yval <- c(parenthood$grumpiness[i],good.coef[1]+good.coef[2]*parenthood$hours_slept[i])
 	  lines(xval,yval,type='l', col = emphGrey)
 	}
 drawBasicScatterplot(emphGrey, " " )
 	abline( bad.coef, col=ifelse(colour,emphCol,"black"), lwd=3 )
-	for(i in seq_along(parenthood$dan.sleep)) {
-	  xval <- parenthood$dan.sleep[i]*c(1,1)
-	  yval <- c(parenthood$dan.grump[i],bad.coef[1]+bad.coef[2]*parenthood$dan.sleep[i])
+	for(i in seq_along(parenthood$hours_slept)) {
+	  xval <- parenthood$hours_slept[i]*c(1,1)
+	  yval <- c(parenthood$grumpiness[i],bad.coef[1]+bad.coef[2]*parenthood$hours_slept[i])
 	  lines(xval,yval,type='l', col = emphGrey)
 	}
 
@@ -394,7 +407,7 @@ drawBasicScatterplot(emphGrey, " " )
 ### The Prediction
 Predict my grumpiness $\hat{Y_i} = \beta_0 + \beta_1 X_i$ if I slept $x$ hours
 
-### How to we chose the values of $\beta_0$ and $\beta_1$?
+- How to we chose the values of $\beta_0$ and $\beta_1$?
 
 - The lines regression choose the values of $\beta_0$ and $\beta_1$ that minimize the sum of the squared residuals $\sum_{i=1}^n \epsilon_i$
 
@@ -431,8 +444,226 @@ lm(formula = Y ~ X, data = data.frame)
 ---
 ## Using the Sleep Data
 
-```{r gen_pdf, include = FALSE, cache = FALSE, eval = FALSE}
 
+- First we load the data
+
+```{r, eval = FALSE}
+load(file.path("/PATH/TO/DATA","parenthood.Rdata"))
+```
+
+- Then we run the regression
+- `hours_slept` is the predictor variable or dependent variable
+- `grumpiness` is the outcome variable or independent variable
+
+```{r, eval = FALSE}
+regression <- lm(formula = grumpiness ~ hours_slept, data = parenthood)
+```
+
+- You can print the results using the following options
+
+```{r, eval = FALSE}
+print(regression)
+summary(regression)
+tidy(regression) # broom package
+```
+
+---
+## Using the Sleep Data (cont.)
+
+```{r, eval = TRUE, include = FALSE}
+regression <- lm(formula = grumpiness ~ hours_slept, data = parenthood)
+```
+
+- The `print()` function gives us a lot of information about the regression
+
+```{r, eval = TRUE}
+print(regression)
+```
+---
+## Using the Sleep Data (cont.)
+
+- The `summary()` function gives us a lot of information about the regression
+```{r, eval = TRUE}
+summary(regression)
+```
+
+---
+# Translating Results to Math
+
+$$
+\widehat{\text{Grumpiness}} = 125.9563 + (-8.9368) \times \text{Sleep} 
+$$
+
+--
+
+- In other words, the estimates that would draw the best fitting line are:
+
+  - $\hat{\beta_0} = 125.9563$, intercept
+  - $\hat{\beta_1} = -8.9368$
+
+
+---
+# Interpreting the Regression Results
+
+$$
+\widehat{\text{Grumpiness}} = 125.9563 + (8.9368) \times \text{Sleep} 
+$$
+
+--
+.font80[.content-box-purple[
+On average, a one hour increase in sleep is associated with 8.9368 lower Grumpiness, holding everything else constant
+]]
+
+--
+.font80[.content-box-purple[
+The intercept is the expected grumpinness of 125.9563 when sleep is 0 hours `r emo::ji("rage")`
+]]
+
+---
+# Predicting Grumpiness Given a 5 Hour Sleep
+
+$$
+\widehat{\text{Grumpiness}} = 125.9563 + (8.9368) \times \text{Sleep} 
+$$
+
+- By hand:
+
+```{r, eval = TRUE}
+125.9563 + (-8.9368 * 5)
+```
+
+--
+- Using `predict()` function
+
+```{r, eval = TRUE}
+grumpiness <- data.frame(hours_slept = 5)
+predict(regression, newdata = grumpiness)
+```
+
+---
+## Multiple Linear Regression
+
+- The example we just did was a simple linear regression with a single variable
+
+- Most research projects have multiple predictors
+
+- Out example predicted the effect of sleep on grumpiness
+
+- We could add another predictor, like the number of hours my dogs sleep
+
+### In R
+
+```{r, eval = TRUE}
+regression2 <- lm(formula = grumpiness ~ hours_slept + dogs, data = parenthood)
+print(regression2)
+```
+---
+## Formula for the General caused
+
+\begin{align*}
+Y_i &= \beta_0 + (\sum_{k = 1}^K \beta_k X_{ik}) + \epsilon_i \\
+&= \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \dots + \beta_K X_{iK} + \epsilon_i
+\end{align*}
+
+---
+## How do we Know if a Model is Good?
+
+### The $R^2$
+
+- The $R^2$ is a measure of how well the model fits the data
+- It is the proportion of the variance in the outcome variable that is explained by the model
+
+$$
+R^2 = \frac{\text{Explained Variation}}{\text{Total Variation}}
+$$
+
+--
+### We can calculate it using we need to do the following
+
+1. Sum of the squared residuals:
+$$
+SS_{res} = \sum_i (\epsilon_i)^2 =\sum_i (Y_i - \hat{Y_i})^2
+$$
+
+2. Total Sum of Squares:
+$$
+SS_{tot} = \sum_i (Y_i - \bar{Y_i})^2
+$$
+
+---
+## In R
+
+```{r, eval = TRUE}
+X <- parenthood$hours_slept # predictor
+Y <- parenthood$grumpiness # outcome
+```
+
+- To calculate $\hat{Y_i}$:
+
+```{r, eval = TRUE}
+Y.pred <- -8.94 * X + 125.97
+```
+
+--
+- The sum squared residuals (SSR):
+
+```{r, eval = TRUE}
+SS.res <- sum((Y - Y.pred)^2)
+```
+
+--
+- The total sum of squares (SST):
+
+```{r, eval = TRUE}
+SS.tot <- sum((Y - mean(Y))^2)
+paste0("SSR: ", SS.res, " SST: ", SS.tot)
+```
+
+---
+## In R (cont.)
+
+### The $R^2$
+
+\begin{align*}
+R^2 = 1 - \frac{SS_{res}}{SS_{tot}}
+\end{align*}
+
+#### Which we can now calculate:
+
+
+```{r, eval = TRUE}
+R.squared <- 1 - (SS.res / SS.tot)
+print( R.squared )
+```
+
+--
+
+- The $R^2$ is the proportion of the variance in the outcome variable that is explained by the model
+- It is sometimes called the .brand-red[coefficient of determination]
+- The proportion of the variance in the outcome variable that can be accounted for by the predictor
+- So an $R^2$ of 0.82 means that 82% of the variance in my grumpiness (Y) can be explained by my sleep (X)
+
+---
+## Relationship Between Regression and Correlations
+
+- As I said at the beggining, regression is similiar to correlation from earlier in the semester
+
+- $r$ is the correlation coefficient
+
+- $R^2$ is identical to $r^2$
+
+```{r, eval = TRUE}
+r <- cor(X, Y)
+print(r^2)
+```
+
+```{r, eval = TRUE} 
+R.squared <- 1 - (SS.res / SS.tot)
+print( R.squared )
+```
+
+
+```{r gen_pdf, include = FALSE, cache = FALSE, eval = FALSE}
 # https://hhadah.github.io/MicroSlides/MyPresentations/intro/intro.html
 
 infile = list.files(path = "/Users/hhadah/Documents/GiT/teaching-demo/index.html", pattern = 'index.html')
