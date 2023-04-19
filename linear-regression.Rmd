@@ -44,7 +44,7 @@ top_icon = function(x) {
 ```
 
 ```{r setup, include=FALSE}
-# xaringanExtra::use_scribble() ## Draw on slides. Requires dev version of xaringanExtra.
+xaringanExtra::use_scribble() ## Draw on slides. Requires dev version of xaringanExtra.
 
 options(htmltools.dir.version = FALSE)
 library(knitr)
@@ -151,6 +151,8 @@ class: segue-red
 #### 4. Running a Linear Regression in R
 ]
 
+???
+After today's lecture, you will have what a linear regression model is, to derive a regression equation, how to run a linear regression in R, and how to interpret the results.
 
 ---
 name: linear-regression
@@ -158,138 +160,8 @@ class: segue-red
 
 # Linear Regression
 
----
-
-## Essential parts of regression
-
-.pull-left[
-.content-box-purple.large[**Y**]
-
-.content-box-yellow[Outcome variable]
-
-.content-box-yellow[Response variable]
-
-.content-box-yellow[Dependent variable]
-
-.content-box-purple[Thing you want to explain or predict]
-]
-
---
-
-.pull-right[
-.content-box-purple.large[**X**]
-
-.content-box-yellow[Explanatory variable]
-
-.content-box-yellow[Predictor variable]
-
-.content-box-yellow[Independent variable]
-
-.content-box-purple[Thing you use to explain or predict **Y**]
-]
-
----
-## Identify variables
-
-.pull-left[
-.Large[.content-box-purple[
-A study examines the effect of smoking on lung cancer
-]]
-
-.Large[.content-box-purple[
-Researchers predict genocides by looking at negative media coverage, revolutions in neighboring countries, and economic growth
-]]
-]
-
-.pull-right[
-.Large[.content-box-purple[
-You want to see if taking more AP classes in high school improves college grades
-]]
-
-.Large[.content-box-purple[
-Netflix uses your past viewing history, the day of the week, and the time of the day to guess which show you want to watch next
-]]
-]
-
----
-
-# Two purposes of regression
-
-.pull-left[
-.content-box-purple[Prediction]
-
-.content-box-yellow[Forecast the future]
-
-.content-box-yellow[Focus is on **Y**]
-
-.Large[.content-box-green[
-Netflix trying to guess your next show
-]]
-
-.Large[.content-box-green[
-Predicting who will enroll in SNAP
-]]
-]
-
---
-
-.pull-right[
-.content-box-purple[Explanation]
-
-.content-box-yellow[Explain effect of **X** on **Y**]
-
-.content-box-yellow[Focus is on **X**]
-
-.Large[.content-box-green[
-Netflix looking at the effect of the time of day on show selection
-]]
-
-.Large[.content-box-green[
-Measuring the effect of SNAP on poverty reduction
-]]
-]
-
----
-## How Can we do this?
-
-.Large[.content-box-green[
-Plot **X** and **Y**
-]]
-
---
-
-.large[.content-box-red[
-Draw a line that approximates the relationship
-]]
-
-.small[.content-box-red[
-and that would plausibly work for data not in the sample!
-]]
-
---
-
-.large[.content-box-red[
-Find mathy parts of the line
-]]
-
---
-
-.large[.content-box-red[
-Interpret the math
-]]
-
----
-## What is a Linear Regression?
-
-.Large[.content-box-purple[
-A linear regression is a tool used by economists to analyze relationships between interval scale predictors and interval scale outcomes
-]]
-
---
-- What does this definition reminde you of?
-
---
-- Correlations
+???
+Let's start!
 
 ---
 ## What is a linear regression model?
@@ -303,6 +175,16 @@ parenthood |>
   labs(x = "My sleep (hours)",
        y = "My grumpiness (0-100)")
 ```
+???
+- I belive the best way to understand what a regression is by presenting a scatterplot from a data of sleep. Let's say that the x axis is the hours of sleep I get on a specific day, and the y axis is my grumpiness on that day.
+
+- So each dot is a data point for a specific day.
+
+- So we can investigate at each specific day how much grumpiness I had based on the hours of sleep I got.
+
+- For example....
+
+- So by looking at the data, we can see that there is a relationship between the hours of sleep and my grumpiness
 
 ---
 count: false
@@ -342,6 +224,61 @@ parenthood |>
 - We can predict my grumpiness based on the data points
 - How grumpy could I be if I had 7 hours of sleep?
 
+???
+We can also predict my grumpiness.
+
+Let's say that I am going to have 7 hours of sleep. How grumpy could I be?
+
+---
+count: false
+
+## What is a linear regression model?
+
+```{r regression3a, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE, fig.height=3}
+parenthood |> 
+  ggplot(aes(x = hours_slept, y = grumpiness)) +
+  geom_point() +
+  geom_vline(xintercept = 10, color = "red", linetype = "dashed") +
+  geom_vline(xintercept = 12, color = "blue", linetype = "dashed") +
+  theme_customs() +
+  theme(axis.title.y = element_text(size = 15)) +
+  labs(x = "My sleep (hours)",
+       y = "My grumpiness (0-100)")+
+  scale_y_continuous(limits = c(10, 120))
+```
+
+- You could also predict out of sample values
+
+???
+You could also predict out of sample values.
+
+Tell me how grumpy I could be if I had 10 hours of sleep?
+
+What about 12?
+
+---
+count: false
+
+## What is a linear regression model?
+
+```{r regression3b, fig.cap="Scatterplot showing grumpiness as a function of hours slept.", echo=FALSE, warning=FALSE, fig.height=3}
+parenthood |> 
+  ggplot(aes(x = hours_slept, y = grumpiness)) +
+  geom_point() +
+  geom_vline(xintercept = 4, color = "red", linetype = "dashed") +
+  theme_customs() +
+  theme(axis.title.y = element_text(size = 15)) +
+  labs(x = "My sleep (hours)",
+       y = "My grumpiness (0-100)")+
+  scale_y_continuous(limits = c(20, 120))
+```
+
+- You could also predict out of sample values
+
+???
+
+What about 4?
+
 ---
 ## Predict my grumpiness given any hours of sleep
 
@@ -355,7 +292,10 @@ parenthood |>
        y = "My grumpiness (0-100)")
 ```
 
+???
+So, we can use the data to predict and make explinations about the relationship between the hours of sleep and my grumpiness.
 
+When we predicted my out of sample grumpiness, we drew a line that was the best fit for the data.
 ---
 ## Regression: “Best Fitting” Line Through Cloud of Points
 
@@ -369,7 +309,8 @@ parenthood |>
   labs(x = "My sleep (hours)",
        y = "My grumpiness (0-100)")
 ```
-
+???
+And this line is called the regression line.
 ---
 ## Regression: “Best Fitting” Line Through Cloud of Points
 
@@ -398,6 +339,207 @@ plot2 <- parenthood %>%
 
 grid.arrange(plot1, plot2, ncol = 2)
 ```
+
+???
+A regression line is the line that is best fitting line through the cloud of data points
+
+To understand why it's the best fitting line, let look at this graph
+
+Tell me which line is the best fitting line? Why? Which one makes the best predictions?
+
+It's the one on the left because it minimizes the distance between the predicted data (the line) and the actual data (the points).
+
+---
+
+## Essential parts of regression
+
+.pull-left[
+.content-box-purple.large[**Y**]
+
+.content-box-yellow[Outcome variable]
+
+.content-box-yellow[Response variable]
+
+.content-box-yellow[Dependent variable]
+
+.content-box-purple[Thing you want to explain or predict]
+]
+
+???
+Now to some technical terms and definitions
+
+In a regression there are two type of variables
+
+The first type is the outcome variable, also called response, dependent, or explained variable.
+
+This variable is the thing you want to explain or predict.
+
+--
+
+.pull-right[
+.content-box-purple.large[**X**]
+
+.content-box-yellow[Explanatory variable]
+
+.content-box-yellow[Predictor variable]
+
+.content-box-yellow[Independent variable]
+
+.content-box-purple[Thing you use to explain or predict **Y**]
+]
+
+???
+The second type of variable is the explanatory variable, also called predictor, independent, or explanatory variable.
+
+This variable is the thing you use to explain or predict the outcome variable.
+
+
+So in my example, the outcome variable is my grumpiness and the explanatory variable is my hours of sleep.
+---
+## Identify variables
+
+.pull-left[
+.Large[.content-box-purple[
+A study examines the effect of smoking on lung cancer
+]]
+
+.Large[.content-box-purple[
+Researchers predict genocides by looking at negative media coverage, revolutions in neighboring countries, and economic growth
+]]
+]
+
+.pull-right[
+.Large[.content-box-purple[
+You want to see if taking more AP classes in high school improves college grades
+]]
+
+.Large[.content-box-purple[
+Netflix uses your past viewing history, the day of the week, and the time of the day to guess which show you want to watch next
+]]
+]
+
+???
+Let's identify the outcome and explanatory variables in some examples
+
+What is the outcome variable and what are the explanatory variables in each example?
+
+In the first example, the outcome variable is lung cancer and the explanatory variable is smoking.
+
+In the second example, the outcome variable is genocides and the explanatory variables are negative media coverage, revolutions in neighboring countries, and economic growth.
+
+In the third example, the outcome variable is college grades and the explanatory variable is AP classes.
+
+In the fourth example, the outcome variable is the next show you want to watch and the explanatory variables are your past viewing history, the day of the week, and the time of the day.
+
+---
+
+# Two purposes of regression
+
+.pull-left[
+.content-box-purple[Prediction]
+
+.content-box-yellow[Forecast the future]
+
+.content-box-yellow[Focus is on **Y**]
+
+.Large[.content-box-green[
+Netflix trying to guess your next show
+]]
+
+.Large[.content-box-green[
+Predicting who will enroll in SNAP
+]]
+]
+
+???
+There are two purposes of regression
+
+The first being prediction
+
+In this case, you are trying to forecast the future
+
+You would focus on the outcome variable Y 
+
+So in our examples, netflix will try to predict which show you want to watch next and the researchers will try to predict who will enroll in SNAP
+
+--
+
+.pull-right[
+.content-box-purple[Explanation]
+
+.content-box-yellow[Explain effect of **X** on **Y**]
+
+.content-box-yellow[Focus is on **X**]
+
+.Large[.content-box-green[
+Netflix looking at the effect of the time of day on show selection
+]]
+
+.Large[.content-box-green[
+Measuring the effect of SNAP on poverty reduction
+]]
+]
+
+???
+The second purpose of regression is explanation
+
+You would want to explain the effect of X on Y
+
+You would focus on the explanatory variable X
+
+So in our examples, netflix will look at the effect of the time of day on show selection and the researchers will measure the effect of SNAP on poverty reduction
+
+
+---
+## How Can we do this?
+
+.Large[.content-box-green[
+Plot **X** and **Y**
+]]
+
+--
+
+.large[.content-box-red[
+Draw a line that approximates the relationship
+]]
+
+.small[.content-box-red[
+and that would plausibly work for data not in the sample!
+]]
+
+--
+
+.large[.content-box-red[
+Find mathy parts of the line
+]]
+
+--
+
+.large[.content-box-red[
+Interpret the math
+]]
+
+---
+## What is a Linear Regression?
+
+.Large[.content-box-purple[
+A linear regression is a tool used by economists to analyze relationships between interval scale predictors and interval scale outcomes
+]]
+
+--
+- What does this remind you of?
+
+--
+- Hint: ________ is not causation
+
+--
+  - .brand-red[Correlations]
+
+???
+This is a definition of a linear regression
+
+A linear regression is a tool used by economists to analyze relationships between interval scale predictors and interval scale outcomes
+
 
 ---
 name: deriving-the-regression-equation
@@ -440,7 +582,7 @@ $$
 \hat{Y_i} = \beta_0 + \beta_1 X_i
 $$
 
-- $X_i$: is the value of predictor variable for the _i_th observation
+- $X_i$: is the value of predictor variable for the _i_ th observation
   - numbers of hours of sleep I got on day _i_
 - $Y_i$: is the corresponding value of the outcome variable (i.e., my grumpiness on that day)
 - $\hat{Y_i}$: is the predicted value of $Y_i$ for a given value of $X_i$
@@ -529,7 +671,7 @@ Predict my grumpiness $\hat{Y_i} = \beta_0 + \beta_1 X_i$ if I slept $x$ hours
 
 - How to we chose the values of $\beta_0$ and $\beta_1$?
 
-- The lines regression choose the values of $\beta_0$ and $\beta_1$ that minimize the sum of the squared residuals $\sum_{i=1}^n \epsilon_i$
+- The lines regression choose the values of $\beta_0$ and $\beta_1$ that minimize the sum of the squared residuals $\sum_{i=1}^n \epsilon_i^2$
 
 #### The sum of the squared residuals is given by:
 
@@ -537,7 +679,7 @@ $$
 \sum_{i=1}^n (Y_i - \hat{Y_i})^2
 $$
 
-- When minimized, we will get the optimal estiamted $\hat{\beta_0}$ and $\hat{beta_1}$?
+- When minimized, we will get the optimal estiamted $\hat{\beta_0}$ and $\hat{\beta_1}$?
 
 - The more technical name for this estimation process is _.brand-blue[ordinary least squares (OLS) regression]_
 
@@ -568,7 +710,7 @@ lm(formula = Y ~ X, data = data.frame)
 - First we load the data
 
 ```{r, eval = FALSE}
-load(file.path("/PATH/TO/DATA","parenthood.Rdata"))
+read.csv("/PATH/teaching-demo/parenthood.csv")
 ```
 
 - Then we run the regression
@@ -585,8 +727,9 @@ regression <- lm(formula = grumpiness ~ hours_slept, data = parenthood)
 print(regression)
 summary(regression)
 tidy(regression) # broom package
-```
+modelsummary(regression) # modelsummary package
 
+```
 ---
 ## Using the Sleep Data (cont.)
 
@@ -594,7 +737,7 @@ tidy(regression) # broom package
 regression <- lm(formula = grumpiness ~ hours_slept, data = parenthood)
 ```
 
-- The `print()` function gives us a lot of information about the regression
+- The `print()` function gives us the regression equation and the coefficients
 
 ```{r, eval = TRUE}
 print(regression)
@@ -605,6 +748,32 @@ print(regression)
 - The `summary()` function gives us a lot of information about the regression
 ```{r, eval = TRUE}
 summary(regression)
+```
+
+---
+## Using the Sleep Data (cont.)
+
+- The `modelsummary()` produces a nice table of the regression results that is easy to read and customize
+
+```{r, eval = TRUE, include = FALSE}
+options("modelsummary_format_numeric_html" = "plain")
+```
+
+.scroll-output[
+```{r, eval = TRUE}
+library(modelsummary)
+modelsummary(regression, gof.omit = c("nobs", "r.squared"))
+```
+]
+
+---
+## Using the Sleep Data (cont.)
+
+- The `tidy()` function produces a nice table output of the results
+
+```{r, eval = TRUE}
+library(broom)
+tidy(regression)
 ```
 
 ---
@@ -626,7 +795,7 @@ $$
 # Interpreting the Regression Results
 
 $$
-\widehat{\text{Grumpiness}} = 125.9563 + (8.9368) \times \text{Sleep} 
+\widehat{\text{Grumpiness}} = 125.9563 + (-8.9368) \times \text{Sleep} 
 $$
 
 --
@@ -643,7 +812,7 @@ The intercept is the expected grumpinness of 125.9563 when sleep is 0 hours `r e
 # Predicting Grumpiness Given a 5 Hour Sleep
 
 $$
-\widehat{\text{Grumpiness}} = 125.9563 + (8.9368) \times \text{Sleep} 
+\widehat{\text{Grumpiness}} = 125.9563 + (-8.9368) \times \text{Sleep} 
 $$
 
 - By hand:
